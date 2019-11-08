@@ -8,20 +8,31 @@ public class FishAI : MonoBehaviour
     private Vector3 direction;
     private bool onScreen = false;
     private float screenTimer;
+
+    private float time;
     // Start is called before the first frame update
     void Start()
     {
         screenTimer = 0;
         fish = GetComponent<Fish>();
         if (transform.position.x < Camera.main.transform.position.x)
-            direction = new Vector3(1, 0, 0) * 10;
+        {
+            direction = new Vector3(1, 0, 0);
+
+        }
         else
-            direction = new Vector3(-1, 0, 0) * 10;
+        {
+            direction = new Vector3(-1, 0, 0);
+            GetComponent<SpriteRenderer>().flipX = true;
+        }
+        time = Random.Range(0f, 1f);
     }
 
     // Update is called once per frame
     void Update()
     {
+        time += Time.smoothDeltaTime;
+        direction.y = Mathf.Sin(time);
         fish.GoTo(transform.position + direction);
         Vector3 viewPos = Camera.main.WorldToViewportPoint(transform.position);
         viewPos.z = 0;

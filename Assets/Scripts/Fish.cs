@@ -31,7 +31,7 @@ public class Fish : MonoBehaviour
         {
             float speed = 0;
             if (name == "Player")
-                speed = 1f / m_mass * 0.2f;
+                speed = 1f;
             else
                 speed = 1f / m_mass;
             rb2d.MovePosition(Vector3.MoveTowards(rb2d.position, target, speed * Time.smoothDeltaTime));
