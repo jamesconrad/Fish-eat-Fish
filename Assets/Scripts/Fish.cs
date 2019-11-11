@@ -41,12 +41,12 @@ public class Fish : MonoBehaviour
     public void SetMass(float mass)
     {
         m_mass = mass;
-        float neededArea = mass / GetComponent<Collider2D>().density;
+        float neededArea = mass; //area = mass / density; density is 1 by default and will remain at 1 for all fish
         float scalar = neededArea / baseArea;
 
         //to increase the area we need the sqrt of the edge scalars
         Vector3 newScale = new Vector3(1, 1, 0) * Mathf.Sqrt(scalar);
-
+        print(scalar);
         newScale.z = 1;
         transform.localScale = newScale;
 
@@ -64,35 +64,47 @@ public class Fish : MonoBehaviour
     {
         target = pos;
         arrived = false;
-    }
-    private void OnCollisionEnter2D(Collision2D collision)
-    {
-        if (name != "Player")
-            return;
-        Fish other = collision.gameObject.GetComponent<Fish>();
-        if (other.m_mass > m_mass)
-            eaten = true;
-        if (m_mass > other.m_mass)
+        //orient to correct direction
+        Quaternion q = new Quaternion();
+        if (target.x - transform.position.x > 0)
         {
-            SetMass(m_mass + Mathf.Sqrt(other.m_mass));
-            other.eaten = true;
+            q.eulerAngles = new Vector3(0, 0, 0);
+            transform.localRotation = q;
+        }
+        else
+        {
+            q.eulerAngles = new Vector3(0, 180, 0);
+            transform.localRotation = q;
         }
     }
+    //private void OnCollisionEnter2D(Collision2D collision)
+    //{
+    //    if (collision. != "Player")
+    //        return;
+    //    Fish other = collision.gameObject.GetComponent<Fish>();
+    //    if (other.m_mass > m_mass)
+    //        eaten = true;
+    //    if (m_mass > other.m_mass)
+    //    {
+    //        SetMass(m_mass + Mathf.Sqrt(other.m_mass) / 4);
+    //        other.eaten = true;
+    //    }
+    //}
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        if (name != "Player")
+        if (collision.tag != "Player")
             return;
-        print(name + " vs " + collision.gameObject.name);
+        //print(name + " vs " + collision.gameObject.name);
         Fish other = collision.gameObject.GetComponent<Fish>();
         if (other.m_mass > m_mass)
             eaten = true;
         if (m_mass > other.m_mass)
         {
-            SetMass(m_mass + Mathf.Sqrt(other.m_mass));
+            SetMass(m_mass + Mathf.Sqrt(other.m_mass) / 4);
             other.eaten = true;
         }
-
+    
     }
     private void CalculateBaseArea()
     {

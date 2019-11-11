@@ -10,15 +10,20 @@ public class FishSpawner : MonoBehaviour
     public Gradient sizeGradient;
     public float minMass = 0.25f;
     public float maxMass = 10f;
-
+    public float spawnDistance;
     public bool spawnFish = false;
+    public float maxAverageStep;
+    private float halfAverageStep;
+    private float massRange;
 
     public Fish playerFish;
+    public DepthCameraEffects dcEffect;
 
     // Start is called before the first frame update
     void Start()
     {
-
+        massRange = maxMass - minMass;
+        halfAverageStep = maxAverageStep / 2;
     }
 
 
@@ -34,18 +39,16 @@ public class FishSpawner : MonoBehaviour
         fishGO.transform.SetParent(transform);
         Fish fish = fishGO.GetComponent<Fish>();
         Material fishMat = fishGO.GetComponent<SpriteRenderer>().material;
-        PolygonCollider2D fishPoly = fishGO.GetComponent<PolygonCollider2D>();
 
         float randMass = RandomMass();
         fish.SetMass(randMass);
         fishMat.color = sizeGradient.Evaluate(MassTo01Range(randMass));
 
-
-        //select a point off screen within 2 viewports of player
-        float spawnX = Random.Range(-1f, 1f) >= 0 ? Random.Range(-1f, -1f): Random.Range(1f,1f);
+        float spawnX = Random.Range(-1f, 1f);
         float spawnY = Random.Range(-1f, 1f);
-        Vector3 spawnPos = Camera.main.ViewportToWorldPoint(new Vector3(spawnX, spawnY, 0));
+        Vector3 spawnPos = (new Vector3(spawnX, spawnY, 0)).normalized * spawnDistance + playerFish.transform.position;
         spawnPos.z = 0;
+        spawnPos.y = Mathf.Clamp(spawnPos.y, dcEffect.minY, dcEffect.maxY);
         fishGO.transform.position = spawnPos;
         fishGO.name = randMass.ToString();
 
@@ -60,21 +63,34 @@ public class FishSpawner : MonoBehaviour
     private float RandomMass()
     {
         Fish[] spawnedFish = GetComponentsInChildren<Fish>();
-        float averageMass = 0;
+        float totalMass = 0;
         int edibleFish = 0;
         foreach (Fish f in spawnedFish)
         {
-            averageMass += f.m_mass;
+            totalMass += f.m_mass;
             if (f.m_mass < playerFish.m_mass)
                 edibleFish++;
         }
-        averageMass /= spawnedFish.Length;
+        float averageMass = totalMass / spawnedFish.Length;
 
         //not enough fish we can eat, spawn a smaller fish
         if (edibleFish < minEdibleFish)
             return Random.Range(minMass, playerFish.m_mass) - 0.05f;
 
-        //number of edible fish is ok, now we want to try to balance the average to be slightly higher than player mass
-        return Random.Range(minMass, maxMass);
+        //now we need to try and get the average mass between its ratio equal to the average mass for current height
+        //new value x required to set average to value a
+        //x = a * newNumValues - sumValues
+        float targetAverageMass = dcEffect.normalizedHeight * massRange + minMass;
+        float averageStepRequired = targetAverageMass - averageMass;
+        float newAverage;
+        if (averageStepRequired >= halfAverageStep)
+            newAverage = averageMass + Random.Range(halfAverageStep, maxAverageStep);
+        else if (averageStepRequired <= halfAverageStep * -1)
+            newAverage = averageMass - Random.Range(halfAverageStep, maxAverageStep);
+        else
+            newAverage = averageMass + Random.Range(-Mathf.Abs(averageStepRequired), Mathf.Abs(averageStepRequired));
+        //print("AVG mass:" + averageMass + " DESIRED next mass: " + newAverage);
+
+        return Mathf.Clamp(newAverage * (spawnedFish.Length + 1) - totalMass, minMass, maxMass); //return the mass needed to set the average mass to newAverage
     }
 }
