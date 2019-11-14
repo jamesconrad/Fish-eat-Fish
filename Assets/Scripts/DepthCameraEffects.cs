@@ -15,6 +15,8 @@ public class DepthCameraEffects : MonoBehaviour
     private float yRange;
     private float luminanceRange;
 
+    public InputHandler.State state = InputHandler.State.Menu;
+
     public float normalizedHeight { private set; get; }
 
     private void Start()
@@ -27,13 +29,22 @@ public class DepthCameraEffects : MonoBehaviour
     void Update()
     {
         //calculate values for the various effects, all based on a minmax range using camera y value
-        float camY = Mathf.Clamp(target.position.y, minY, maxY);
+        float camY;
+
+        if (state == InputHandler.State.Game)
+            camY = Mathf.Clamp(target.position.y, minY, maxY);
+        else
+            camY = Mathf.Clamp((Mathf.Cos(Time.realtimeSinceStartup/15) + 1) / 2 * yRange + minY, minY, maxY);
         normalizedHeight = 1 - (camY - minY) / yRange; //flip range so 0 is at max height, 1 is at min
         float luminosity = luminanceRange - (normalizedHeight * luminanceRange + minLuminance);
         Color bgColor = backgroundGradient.Evaluate(normalizedHeight);
 
         //assign values
-        transform.position = new Vector3(transform.position.x, camY, transform.position.z);
+
+        if (state == InputHandler.State.Game)
+            transform.position = new Vector3(target.position.x, camY, transform.position.z);
+        else
+            transform.position = new Vector3(transform.position.x, camY, transform.position.z);
         frontDirLight.intensity = luminosity;
         backDirLight.intensity = luminosity;
         Camera.main.backgroundColor = bgColor;

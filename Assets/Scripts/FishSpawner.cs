@@ -18,6 +18,7 @@ public class FishSpawner : MonoBehaviour
 
     public Fish playerFish;
     public DepthCameraEffects dcEffect;
+    public InputHandler.State state = InputHandler.State.Menu;
 
     // Start is called before the first frame update
     void Start()
@@ -46,7 +47,7 @@ public class FishSpawner : MonoBehaviour
 
         float spawnX = Random.Range(-1f, 1f);
         float spawnY = Random.Range(-1f, 1f);
-        Vector3 spawnPos = (new Vector3(spawnX, spawnY, 0)).normalized * spawnDistance + playerFish.transform.position;
+        Vector3 spawnPos = (new Vector3(spawnX, spawnY, 0)).normalized * spawnDistance + Camera.main.transform.position;
         spawnPos.z = 0;
         spawnPos.y = Mathf.Clamp(spawnPos.y, dcEffect.minY, dcEffect.maxY);
         fishGO.transform.position = spawnPos;
@@ -68,13 +69,13 @@ public class FishSpawner : MonoBehaviour
         foreach (Fish f in spawnedFish)
         {
             totalMass += f.m_mass;
-            if (f.m_mass < playerFish.m_mass)
+            if (state == InputHandler.State.Game && f.m_mass < playerFish.m_mass)
                 edibleFish++;
         }
         float averageMass = totalMass / spawnedFish.Length;
 
         //not enough fish we can eat, spawn a smaller fish
-        if (edibleFish < minEdibleFish)
+        if (state == InputHandler.State.Game && edibleFish < minEdibleFish)
             return Random.Range(minMass, playerFish.m_mass) - 0.05f;
 
         //now we need to try and get the average mass between its ratio equal to the average mass for current height
@@ -92,5 +93,11 @@ public class FishSpawner : MonoBehaviour
         //print("AVG mass:" + averageMass + " DESIRED next mass: " + newAverage);
 
         return Mathf.Clamp(newAverage * (spawnedFish.Length + 1) - totalMass, minMass, maxMass); //return the mass needed to set the average mass to newAverage
+    }
+
+    public void DeleteAllFish()
+    {
+        foreach(Transform t in transform)
+            Destroy(t.gameObject);
     }
 }

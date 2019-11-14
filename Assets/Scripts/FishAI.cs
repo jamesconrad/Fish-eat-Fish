@@ -8,15 +8,15 @@ public class FishAI : MonoBehaviour
     private Vector3 direction;
     private bool onScreen = false;
     private float screenTimer;
-    private static Transform player;
+    //private static Transform player;
     public float maxRange;
 
     private float time;
     // Start is called before the first frame update
     void Start()
     {
-        if (player == null)
-            player = GameObject.FindGameObjectWithTag("Player").transform;
+        //if (player == null)
+        //    player = GameObject.FindGameObjectWithTag("Player").transform;
         screenTimer = 0;
         fish = GetComponent<Fish>();
         if (transform.position.x < Camera.main.transform.position.x)
@@ -38,9 +38,9 @@ public class FishAI : MonoBehaviour
         time += Time.smoothDeltaTime;
         direction.y = Mathf.Sin(time);
         fish.GoTo(transform.position + direction);
-        Vector3 toPlayer = transform.position - player.position;
-        toPlayer.z = 0;
-        if (toPlayer.magnitude < maxRange)
+        Vector3 toCamera = transform.position - Camera.main.transform.position;
+        toCamera.z = 0;
+        if (toCamera.magnitude < maxRange)
         {
             screenTimer = 0;
             onScreen = true;

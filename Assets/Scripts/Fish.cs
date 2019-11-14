@@ -45,8 +45,7 @@ public class Fish : MonoBehaviour
         float scalar = neededArea / baseArea;
 
         //to increase the area we need the sqrt of the edge scalars
-        Vector3 newScale = new Vector3(1, 1, 0) * Mathf.Sqrt(scalar);
-        print(scalar);
+        Vector3 newScale = new Vector3(1, 1, 0) * Mathf.Abs(Mathf.Sqrt(scalar));
         newScale.z = 1;
         transform.localScale = newScale;
 
@@ -91,6 +90,14 @@ public class Fish : MonoBehaviour
     //    }
     //}
 
+    private void OnDestroy()
+    {
+        //call gameover
+        if (transform.tag != "Player")
+            return;
+        FindObjectOfType<InputHandler>().StopGame();
+    }
+
     private void OnTriggerEnter2D(Collider2D collision)
     {
         if (collision.tag != "Player")
@@ -98,7 +105,10 @@ public class Fish : MonoBehaviour
         //print(name + " vs " + collision.gameObject.name);
         Fish other = collision.gameObject.GetComponent<Fish>();
         if (other.m_mass > m_mass)
+        {
+            other.SetMass(other.m_mass + Mathf.Sqrt(m_mass) / 4);
             eaten = true;
+        }
         if (m_mass > other.m_mass)
         {
             SetMass(m_mass + Mathf.Sqrt(other.m_mass) / 4);
